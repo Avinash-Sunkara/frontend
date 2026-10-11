@@ -1,4 +1,10 @@
-export const API_URL = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+export function normalizeApiUrl(value: string | undefined) {
+  const base = (value || "").replace(/\/+$/, "");
+  if (!base || /\/api\/v1$/i.test(base)) return base;
+  return `${base}/api/v1`;
+}
+
+export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: unknown) { super(message); }

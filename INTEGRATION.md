@@ -1,7 +1,7 @@
 # CodeWithAws — frontend ↔ backend integration
 
 ## What was done
-The frontend was built against `docs/API_CONTRACT.md` (base `/api/v1`, plain JSON, `{message, field?}` errors, `{items,total,page,pageSize,nextPage}` lists).
+The frontend was built against `docs/API_CONTRACT.md` (base `/api/v1`, plain JSON, `{message, field?}` errors, `{items,total,page,pageSize,nextPage}` lists). `NEXT_PUBLIC_API_URL` may be the backend origin or the full `/api/v1` URL; the frontend normalizes an origin to the versioned API path.
 The backend served a different contract (`/api`, `{success,data}` envelope, different field names and routes). Instead of rewriting either side, the backend gained a
 **`/api/v1` adapter layer** (`src/v1/*`) that implements the frontend's contract on top of the existing Prisma models and services. The legacy `/api/*` routes are untouched.
 

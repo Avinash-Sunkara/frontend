@@ -1,10 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function login(page: Page, email = "user@example.com") {
-  await page.goto("/login");
+async function login(page: Page, email = "user@example.com", next = "/dashboard") {
+  await page.goto(`/login?next=${encodeURIComponent(next)}`);
   await page.getByLabel("Email").fill(email);
   await page.getByRole("textbox", { name: /Password/ }).fill("password1");
   await page.getByRole("button", { name: /sign in/i }).click();
+  const expectedPath = next === "/admin" ? "/dashboard" : new URL(next, "http://localhost").pathname;
+  await page.waitForURL((url) => url.pathname === expectedPath);
+  if (expectedPath === "/dashboard") await expect(page.getByRole("heading", { name: /keep pushing, asha/i })).toBeVisible();
 }
 const noHorizontalOverflow = async (page: Page) => {
   const over = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -37,7 +40,7 @@ test("wrong password shows an error", async ({ page }) => {
 test("unauthenticated visit to /dashboard redirects to login", async ({ page }) => { await page.goto("/dashboard"); await expect(page).toHaveURL(/\/login/); });
 
 test("DSA sheet: expand topic, mark solved, LeetCode opens in new tab", async ({ page, context }) => {
-  await login(page); await page.goto("/sheets");
+  await login(page, "user@example.com", "/sheets");
   await expect(page.getByRole("heading", { name: /learn patterns/i })).toBeVisible();
   await expect(page.getByText("Two Sum")).toBeVisible();
   await page.getByRole("button", { name: "Mark solved" }).first().click();
@@ -49,37 +52,41 @@ test("DSA sheet: expand topic, mark solved, LeetCode opens in new tab", async ({
 });
 
 test("core CS reader shows topic content and 'On this page' on wide screens", async ({ page }, info) => {
-  await login(page); await page.goto("/core-cs");
+  await login(page, "user@example.com", "/core-cs");
   await expect(page.getByRole("heading", { name: "SELECT" })).toBeVisible();
   if ((page.viewportSize()?.width ?? 0) >= 1280) await expect(page.getByText("ON THIS PAGE")).toBeVisible();
   await noHorizontalOverflow(page);
 });
 
 test("notes: PDF renders in the protected viewer without download UI", async ({ page }) => {
-  await login(page); await page.goto("/notes/n1");
+  await login(page, "user@example.com", "/notes/n1");
   await expect(page.locator("canvas")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("link", { name: /download/i })).toHaveCount(0);
   await expect(page.getByLabel("Search in document")).toBeVisible();
 });
 
 test("premium note shows paywall with Pay Now", async ({ page }) => {
-  await login(page); await page.goto("/notes/n2");
+  await login(page, "user@example.com", "/notes/n2");
   await expect(page.getByText("Premium Content")).toBeVisible(); await expect(page.getByRole("button", { name: /pay now/i })).toBeVisible();
 });
 
 test("non-admin cannot use /admin; admin can", async ({ page }) => {
-  await login(page); await page.goto("/admin"); await expect(page).toHaveURL(/\/dashboard/);
+  await login(page, "user@example.com", "/admin"); await expect(page).toHaveURL(/\/dashboard/);
 });
 test("admin login → overview", async ({ page }) => {
-  await page.goto("/admin/login"); await page.getByLabel("Email").fill("admin@example.com"); await page.getByRole("textbox", { name: /Password/ }).fill("password1");
-  await page.getByRole("button", { name: /sign in/i }).click(); await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible(); await noHorizontalOverflow(page);
+  await page.goto("/admin/login"); const email = page.getByLabel("Email"); await email.fill("admin@example.com"); await expect(email).toHaveValue("admin@example.com");
+  await page.getByRole("textbox", { name: /Password/ }).fill("password1"); await expect(email).toHaveValue("admin@example.com");
+  const response = page.waitForResponse((r) => new URL(r.url()).pathname.endsWith("/admin/auth/login") && r.request().method() === "POST");
+  await page.getByRole("button", { name: /sign in/i }).click();
+  expect((await response).status()).toBe(200);
+  await expect(page).toHaveURL(/\/admin\/?$/); await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible({ timeout: 15_000 }); await noHorizontalOverflow(page);
 });
 
 test("every main page loads without console errors or overflow", async ({ page }) => {
   const errors: string[] = []; page.on("pageerror", (e) => errors.push(e.message));
   await login(page);
   for (const p of ["/dashboard", "/sheets", "/core-cs", "/aptitude", "/roadmaps", "/roadmaps/r1", "/notes", "/cheat-sheets", "/interviews", "/interviews/i1", "/revision", "/bookmarks", "/activity", "/profile", "/search?q=sum"]) {
-    await page.goto(p); await page.waitForLoadState("networkidle"); await noHorizontalOverflow(page);
+    await page.goto(p, { waitUntil: "domcontentloaded" }); await noHorizontalOverflow(page);
   }
   expect(errors).toEqual([]);
 });

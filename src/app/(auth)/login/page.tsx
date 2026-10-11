@@ -38,7 +38,8 @@ function Form() {
       <OAuthButtons />
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         <Field label="Email" error={errors.email?.message}><Input type="email" autoComplete="email" placeholder="you@example.com" icon={<Mail />} invalid={!!errors.email} {...register("email")} /></Field>
-        <Field label="Password" error={errors.password?.message}><PasswordInput autoComplete="current-password" placeholder="••••••••" invalid={!!errors.password} {...register("password")} /></Field>
+        <div className="space-y-1.5"><label htmlFor="login-password" className="block text-sm font-medium text-muted">Password</label><PasswordInput id="login-password" autoComplete="current-password" placeholder="••••••••" invalid={!!errors.password} {...register("password")} />
+          {errors.password?.message && <span role="alert" className="block text-xs text-hard">{errors.password.message}</span>}</div>
         <div className="flex items-center justify-between text-sm">
           <label className="flex items-center gap-2 text-muted"><input type="checkbox" className="h-4 w-4 accent-[rgb(var(--brand))]" {...register("remember")} />Remember me</label>
           <Link href="/forgot-password" className="font-semibold text-brand hover:underline">Forgot password?</Link>

@@ -1,10 +1,11 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Check, Clock, ExternalLink, GraduationCap, Linkedin, Instagram, Youtube, Quote, Star } from "lucide-react";
 import { useGet } from "@/hooks/useApi";
 import { cn, initials } from "@/lib/utils";
+import { BRAND } from "@/config/brand";
 import type { Course } from "@/lib/types";
 import { ApiError } from "@/lib/api";
 import { PatternVisualizer } from "@/components/features/PatternVisualizer";
@@ -131,9 +132,11 @@ export function Community() {
 }
 
 /* ---------- Founder / about: content from backend, hidden when not configured ---------- */
-interface F { name: string; title: string; photoUrl?: string; bio: string[]; previously?: string[]; stats?: { label: string; value: string }[]; ctaLabel?: string; ctaUrl?: string }
+interface F { name: string; title: string; photoUrl?: string; bio: string[]; previously?: string[]; stats?: { label: string; value: string }[]; socialLinks?: { label: string; url: string }[]; contactEmail?: string; copyrightText?: string; ctaLabel?: string; ctaUrl?: string }
 export function Founder() {
   const q = useGet<F>("/public/founder", undefined, { staleTime: 30_000 });
+  const [photoFailed, setPhotoFailed] = useState(false);
+  useEffect(() => setPhotoFailed(false), [q.data?.photoUrl]);
   if (q.isError && !(q.error instanceof ApiError && q.error.status === 404)) {
     return <p role="alert" className="mx-auto max-w-6xl px-6 py-8 text-sm text-hard">Founder information is temporarily unavailable.</p>;
   }
@@ -141,16 +144,27 @@ export function Founder() {
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       <div className="grid overflow-hidden rounded-3xl border border-line bg-surface md:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
-        <div className="relative min-h-[320px] bg-raised">{f.photoUrl && <Image src={f.photoUrl} alt={f.name} fill sizes="(min-width:768px) 40vw, 100vw" className="object-cover" />}
+        <div className="relative min-h-[320px] bg-gradient-to-br from-raised to-brand/10">{f.photoUrl && !photoFailed && <Image src={f.photoUrl} alt={f.name} fill sizes="(min-width:768px) 40vw, 100vw" className="object-cover" onError={() => setPhotoFailed(true)} />}
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-6"><p className="text-xl font-bold text-white">{f.name}</p><p className="text-sm text-brand">{f.title}</p></div></div>
         <div className="space-y-4 p-6 sm:p-10">
           <h2 className="text-3xl font-extrabold tracking-tight">Hi, I&apos;m <span className="text-brand">{f.name.split(" ")[0]}</span></h2>
           {f.bio?.map((b, k) => <p key={k} className="text-muted">{b}</p>)}
           {!!f.previously?.length && <div className="border-t border-line pt-4"><p className="text-xs font-semibold text-faint">Previously</p><p className="mt-1 font-semibold">{f.previously.join("  ·  ")}</p></div>}
           {!!f.stats?.length && <div className="grid grid-cols-2 gap-3">{f.stats.map((s) => <div key={s.label} className="rounded-xl border border-line p-4"><p className="text-xl font-extrabold">{s.value}</p><p className="text-xs text-muted">{s.label}</p></div>)}</div>}
+          {!!f.socialLinks?.length && <div className="flex flex-wrap gap-2">{f.socialLinks.map((link) => <a key={`${link.label}-${link.url}`} href={link.url} target="_blank" rel="noopener noreferrer" className="rounded-full border border-line px-3 py-1.5 text-sm text-muted hover:border-brand/40 hover:text-brand">{link.label}<ExternalLink className="ml-1 inline h-3 w-3" /></a>)}</div>}
+          {f.contactEmail && <a href={`mailto:${f.contactEmail}`} className="inline-flex items-center gap-2 text-sm text-muted hover:text-brand">{f.contactEmail}</a>}
           {f.ctaUrl && <Link href={f.ctaUrl} target="_blank" rel="noopener noreferrer" className="inline-flex h-12 items-center gap-2 rounded-xl bg-brand px-5 text-sm font-semibold text-brand-ink">{f.ctaLabel ?? "Connect"} <ExternalLink className="h-4 w-4" /></Link>}
         </div>
       </div>
     </section>
   );
+}
+
+export function LandingFooter() {
+  const q = useGet<F>("/public/founder", undefined, { staleTime: 30_000 });
+  return <footer className="border-t border-line py-8 text-center text-sm text-faint">
+    {q.data?.copyrightText ?? `© ${new Date().getFullYear()} ${BRAND.name}`}
+    {" · "}<Link href="/terms" className="hover:text-fg">Terms</Link>
+    {" · "}<Link href="/privacy" className="hover:text-fg">Privacy</Link>
+  </footer>;
 }

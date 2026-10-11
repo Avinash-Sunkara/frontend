@@ -46,9 +46,9 @@ Forms send multipart when a file is chosen (arrays as `key[]`), otherwise JSON.
 
 ## Added for landing page, profile and extra admin
 GET /public/testimonials → [{id,name,handle?,location?,quote,rating?,avatarUrl?}] (published only; empty list hides the section)
-GET /public/founder → {name,title,photoUrl?,bio[],previously?[],stats?[{label,value}],ctaLabel?,ctaUrl?} (404/empty hides the section)
+GET /public/founder → {name,title,photoUrl?,bio[],previously?[],stats?[{label,value}],socialLinks?[{label,url}],contactEmail?,copyrightText?,ctaLabel?,ctaUrl?} (404/empty hides the profile section)
 POST /me/avatar (multipart `avatar`, ≤2 MB image)
-Admin: GET|PUT /admin/founder (multipart: name,title,bio,previously,stats,ctaLabel,ctaUrl,photo)
+Admin: GET|PUT /admin/founder (multipart: name,title,bio,previously,stats,socialLinks,contactEmail,copyrightText,ctaLabel,ctaUrl,photo); `socialLinks` is one `Label|https://...` entry per line.
        CRUD /admin/testimonials · CRUD /admin/roadmaps/resources {nodeId,type,title,url?,content?,file?}
        POST /admin/users/:id/entitlements accepts kind: note|roadmap|cheat-sheet|problem|topic
 
@@ -61,4 +61,4 @@ Admin: CRUD + PATCH /:id/publish + PATCH /:id/reorder on /admin/courses (multipa
 ## Learning activity and streak policy
 The heatmap and learning streak use the configured backend `APP_TIMEZONE` calendar day. Qualifying actions are a problem marked solved, a problem revised, a personal note first created, a logged study session, an aptitude practice attempt, a completed roadmap milestone, and an interview comment. Sign-ins, likes, opening/viewing content, route requests, and refreshes do not count. Daily contribution counts are event counts, while streaks count distinct calendar days; today or yesterday keeps a streak current. Marking a problem unsolved removes its solve activity and reconciles that day's aggregate.
 
-OAuth callback URLs must be registered exactly as configured by `GOOGLE_CALLBACK_URL` and `GITHUB_CALLBACK_URL`. In production, set both to the public backend host, e.g. `https://<render-backend-domain>/api/auth/google/callback` and `https://<render-backend-domain>/api/auth/github/callback`; never expose either provider secret in frontend variables or example files.
+OAuth callback URLs must be registered exactly as configured by `GOOGLE_CALLBACK_URL` and `GITHUB_CALLBACK_URL`. In production, set both to the public backend host, e.g. `https://<render-backend-domain>/api/auth/google/callback` and `https://<render-backend-domain>/api/auth/github/callback`. When a callback URL is omitted, `API_URL` or Render's `RENDER_EXTERNAL_URL` is used as the base; production startup rejects partial provider credentials or credentials without a public callback base. Never expose either provider secret in frontend variables or example files.

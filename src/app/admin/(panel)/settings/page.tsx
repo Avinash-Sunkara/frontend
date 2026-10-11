@@ -7,11 +7,11 @@ import { ResourceManager } from "@/components/admin/ResourceManager";
 import { Textarea } from "@/components/ui/kit";
 
 interface S { siteName: string; supportEmail: string; maintenanceMode: boolean; paymentProvider: string; paymentMode: "GATEWAY" | "MANUAL"; upiDeepLinkTemplate: string; defaultPopupSeconds: number; signupsOpen: boolean }
-interface Founder { name: string; title: string; bio: string[]; previously: string[]; stats: { label: string; value: string }[]; ctaLabel?: string; ctaUrl?: string }
+interface Founder { name: string; title: string; bio: string[]; previously: string[]; stats: { label: string; value: string }[]; socialLinks?: { label: string; url: string }[]; contactEmail?: string; copyrightText?: string; ctaLabel?: string; ctaUrl?: string }
 function FounderForm() {
   const q = useGet<Founder | null>("/admin/founder");
-  const [f, setF] = useState({ name: "", title: "", bio: "", previously: "", stats: "", ctaLabel: "", ctaUrl: "" }); const [photo, setPhoto] = useState<File>();
-  useEffect(() => { const d = q.data; if (d) setF({ name: d.name, title: d.title, bio: d.bio.join("\n\n"), previously: d.previously.join(", "), stats: d.stats.map((x) => `${x.value}|${x.label}`).join("\n"), ctaLabel: d.ctaLabel ?? "", ctaUrl: d.ctaUrl ?? "" }); }, [q.data]);
+  const [f, setF] = useState({ name: "", title: "", bio: "", previously: "", stats: "", socialLinks: "", contactEmail: "", copyrightText: "", ctaLabel: "", ctaUrl: "" }); const [photo, setPhoto] = useState<File>();
+  useEffect(() => { const d = q.data; if (d) setF({ name: d.name, title: d.title, bio: d.bio.join("\n\n"), previously: d.previously.join(", "), stats: d.stats.map((x) => `${x.value}|${x.label}`).join("\n"), socialLinks: (d.socialLinks ?? []).map((x) => `${x.label}|${x.url}`).join("\n"), contactEmail: d.contactEmail ?? "", copyrightText: d.copyrightText ?? "", ctaLabel: d.ctaLabel ?? "", ctaUrl: d.ctaUrl ?? "" }); }, [q.data]);
   const save = useAction<FormData, void>("put", "/admin/founder", { success: "About section saved", invalidate: [["/public/founder"]] });
   const set = (k: string, v: string) => setF((p) => ({ ...p, [k]: v }));
   const submit = () => { const fd = new FormData(); Object.entries(f).forEach(([k, v]) => fd.append(k, v)); if (photo) fd.append("photo", photo); save.mutate(fd); };
@@ -21,6 +21,8 @@ function FounderForm() {
       <Field label="Bio" hint="Separate paragraphs with a blank line"><Textarea rows={6} value={f.bio} onChange={(e) => set("bio", e.target.value)} /></Field>
       <Field label="Previously" hint="Comma separated"><Input value={f.previously} onChange={(e) => set("previously", e.target.value)} /></Field>
       <Field label="Stats" hint="One per line as value|label, e.g. 100+|Mentored 1:1"><Textarea rows={3} value={f.stats} onChange={(e) => set("stats", e.target.value)} /></Field>
+      <Field label="Social and profile links" hint="One per line as Label|https:// URL"><Textarea rows={4} value={f.socialLinks} onChange={(e) => set("socialLinks", e.target.value)} /></Field>
+      <div className="grid gap-4 sm:grid-cols-2"><Field label="Contact email"><Input type="email" value={f.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} /></Field><Field label="Copyright line"><Input maxLength={160} value={f.copyrightText} onChange={(e) => set("copyrightText", e.target.value)} /></Field></div>
       <div className="grid gap-4 sm:grid-cols-2"><Field label="Button label"><Input value={f.ctaLabel} onChange={(e) => set("ctaLabel", e.target.value)} /></Field><Field label="Button URL"><Input type="url" value={f.ctaUrl} onChange={(e) => set("ctaUrl", e.target.value)} /></Field></div>
       <Field label="Photo"><input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0])} className="block w-full text-sm text-muted file:mr-3 file:rounded-lg file:border-0 file:bg-raised file:px-3 file:py-2 file:font-semibold file:text-fg" /></Field>
       <div className="flex justify-end"><Button loading={save.isPending} onClick={submit}>Save</Button></div></Card>);

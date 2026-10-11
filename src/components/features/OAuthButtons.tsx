@@ -7,15 +7,16 @@ const GH = () => (<svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColo
 
 export function OAuthButtons() {
   const providers = useGet<{ google: boolean; github: boolean }>("/auth/providers", undefined, { staleTime: 10 * 60_000 });
-  // Offer only providers the backend has credentials for. If the lookup itself fails, fall back to the env toggles.
-  const on = (p: "google" | "github") => process.env[p === "google" ? "NEXT_PUBLIC_ENABLE_GOOGLE" : "NEXT_PUBLIC_ENABLE_GITHUB"] !== "false" && (providers.isError || providers.data?.[p] === true);
+  const on = (p: "google" | "github") => process.env[p === "google" ? "NEXT_PUBLIC_ENABLE_GOOGLE" : "NEXT_PUBLIC_ENABLE_GITHUB"] !== "false" && providers.data?.[p] === true;
   const go = (p: "google" | "github") => {
     const next = new URLSearchParams(window.location.search).get("next");
     try { if (next) sessionStorage.setItem("rb:next", next); else sessionStorage.removeItem("rb:next"); } catch {}
     window.location.href = oauthUrl(p);
   };
   const google = on("google"), github = on("github");
-  if (providers.isLoading || (!google && !github)) return null;
+  if (providers.isLoading) return null;
+  if (providers.isError) return <p role="alert" className="text-center text-sm text-medium">Social sign-in is temporarily unavailable. You can still sign in with email and password.</p>;
+  if (!google && !github) return null;
   return (
     <>
       <div className={`grid gap-3 ${google && github ? "grid-cols-2" : "grid-cols-1"}`}>

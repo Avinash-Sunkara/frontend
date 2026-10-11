@@ -3,7 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 async function login(page: Page, email = "user@example.com") {
   await page.goto("/login");
   await page.getByLabel("Email").fill(email);
-  await page.getByLabel("Password").fill("password1");
+  await page.getByRole("textbox", { name: /Password/ }).fill("password1");
   await page.getByRole("button", { name: /sign in/i }).click();
 }
 const noHorizontalOverflow = async (page: Page) => {
@@ -30,8 +30,8 @@ test("login → dashboard, then a popup appears and clears", async ({ page }) =>
 });
 
 test("wrong password shows an error", async ({ page }) => {
-  await page.goto("/login"); await page.getByLabel("Email").fill("user@example.com"); await page.getByLabel("Password").fill("nope");
-  await page.getByRole("button", { name: /sign in/i }).click(); await expect(page.getByRole("alert")).toContainText(/incorrect/i);
+  await page.goto("/login"); await page.getByLabel("Email").fill("user@example.com"); await page.getByRole("textbox", { name: /Password/ }).fill("nope");
+  await page.getByRole("button", { name: /sign in/i }).click(); await expect(page.getByRole("alert").filter({ hasText: /incorrect/i })).toBeVisible();
 });
 
 test("unauthenticated visit to /dashboard redirects to login", async ({ page }) => { await page.goto("/dashboard"); await expect(page).toHaveURL(/\/login/); });
@@ -71,7 +71,7 @@ test("non-admin cannot use /admin; admin can", async ({ page }) => {
   await login(page); await page.goto("/admin"); await expect(page).toHaveURL(/\/dashboard/);
 });
 test("admin login → overview", async ({ page }) => {
-  await page.goto("/admin/login"); await page.getByLabel("Email").fill("admin@example.com"); await page.getByLabel("Password").fill("password1");
+  await page.goto("/admin/login"); await page.getByLabel("Email").fill("admin@example.com"); await page.getByRole("textbox", { name: /Password/ }).fill("password1");
   await page.getByRole("button", { name: /sign in/i }).click(); await expect(page.getByRole("heading", { name: "Overview" })).toBeVisible(); await noHorizontalOverflow(page);
 });
 

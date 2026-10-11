@@ -21,7 +21,7 @@ export default function Page() {
       <Logo /><div className="mt-8 flex items-center gap-2 text-brand"><ShieldCheck className="h-5 w-5" /><span className="text-sm font-bold">Admin console</span></div>
       <h1 className="mt-2 text-2xl font-extrabold">Sign in to continue</h1>
       <form onSubmit={submit} className="mt-6 space-y-4"><Field label="Email"><Input type="email" required autoComplete="username" icon={<Mail />} value={email} onChange={(e) => setEmail(e.target.value)} /></Field>
-        <Field label="Password"><PasswordInput required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></Field>
+        <div className="space-y-1.5"><label htmlFor="admin-password" className="block text-sm font-medium text-muted">Password</label><PasswordInput id="admin-password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></div>
         {err && <p role="alert" className="text-sm text-hard">{err}</p>}<Button type="submit" size="lg" className="w-full" loading={busy}>Sign in</Button></form>
     </Card></main>
   );

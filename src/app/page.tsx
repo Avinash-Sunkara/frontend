@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, BookOpenCheck, Brain, Calculator, Database, Layers, MessagesSquare, RotateCcw, ListChecks } from "lucide-react";
 import { Logo } from "@/components/ui/kit";
-import { BRAND } from "@/config/brand";
-import { Community, Courses, Founder, PatternPreview, Testimonials } from "@/components/features/LandingSections";
+import { Community, Courses, Founder, LandingFooter, PatternPreview, Testimonials } from "@/components/features/LandingSections";
 
 const TRACKS = [
   { icon: Layers, tag: "Pattern-first", title: "DSA Sheets", body: "Problems sequenced pattern by pattern rather than topic by topic, plus a focused Last-Minute 100 for revision day.", href: "/sheets" },
@@ -46,7 +45,7 @@ export default function Landing() {
       <section className="mx-auto max-w-3xl px-6 py-20 text-center"><h2 className="text-4xl font-extrabold tracking-tight">Ready to start the <span className="text-brand">first pattern?</span></h2>
         <Link href="/register" className="mt-8 inline-flex h-12 items-center gap-2 rounded-2xl bg-brand px-6 font-semibold text-brand-ink">Create your free account <BookOpenCheck className="h-4 w-4" /></Link></section>
       <Founder />
-      <footer className="border-t border-line py-8 text-center text-sm text-faint">© {new Date().getFullYear()} {BRAND.name} · <Link href="/terms" className="hover:text-fg">Terms</Link> · <Link href="/privacy" className="hover:text-fg">Privacy</Link></footer>
+      <LandingFooter />
     </div>
   );
 }

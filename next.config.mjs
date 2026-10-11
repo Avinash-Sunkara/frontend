@@ -2,13 +2,15 @@
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
 let apiHost = "";
 try { apiHost = new URL(apiUrl).hostname; } catch {}
-// Optional same-origin mode: set API_PROXY_TARGET=https://api.example.com and NEXT_PUBLIC_API_URL=/api/v1. The browser then only talks to the
-// site's own domain, so sign-in cookies are first-party and survive Safari / Chrome third-party-cookie blocking (e.g. Vercel + Render on different domains).
-const proxyTarget = (process.env.API_PROXY_TARGET || "").replace(/\/$/, "");
+// Production uses a same-origin proxy by default so browser privacy settings do not
+// discard auth cookies between the Vercel site and the separately hosted Render API.
+// API_PROXY_TARGET can override the Render origin for previews or other environments.
+const proxyTarget = (process.env.API_PROXY_TARGET || (process.env.VERCEL === "1" ? "https://backend-yvzq.onrender.com" : "")).replace(/\/$/, "");
 const nextConfig = {
   // Keep Playwright's dev server out of the .next cache used by a concurrently running local app.
   distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
+  env: { NEXT_PUBLIC_API_PROXY: proxyTarget ? "true" : "false" },
   async rewrites() { return proxyTarget ? [{ source: "/api/:path*", destination: `${proxyTarget}/api/:path*` }] : []; },
   images: {
     remotePatterns: [

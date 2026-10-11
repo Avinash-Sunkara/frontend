@@ -19,7 +19,8 @@ const patterns = [{ id: "pt1", title: "PATTERN 1 — BASIC", topics: [{ id: "tp1
 const topicBody = (slug) => ({ id: slug, slug, title: slug.toUpperCase(), patternTitle: "PATTERN 1 — BASIC", summary: "Listing columns by name.", html, headings: [{ id: "a", text: "1. Divisibility Rules", level: 2 }, { id: "b", text: "2. HCF & LCM", level: 2 }], practiceCount: 1 });
 const notes = [{ id: "n1", title: "SQL Notes", description: "Complete SQL.", category: "SQL", access: "FREE", locked: false, pages: 3 }, { id: "n2", title: "Premium DSA Notes", category: "DSA", access: "PREMIUM", price: 199, locked: true }];
 const interviews = [{ id: "i1", company: "HCLTech", role: "Java Developer", level: "3+ yrs", difficulty: "Medium", rounds: 4, status: "Selected", title: "HCLTech Java Developer — core Java then architecture", summary: "Four stages.", tags: ["Java"], likes: 6, comments: 0, createdAt: new Date(Date.now() - 30 * 864e5).toISOString(), background: "3+ yrs experience.", roundDetails: [{ title: "Screening call", body: "<p>Recruiter chat.</p>" }], questions: ["What is a HashMap?"], verdict: "Selected — 17 LPA." }];
-const contributions = Array.from({ length: 120 }, (_, i) => ({ date: new Date(Date.now() - i * 864e5).toISOString().slice(0, 10), count: (i * 7) % 6 }));
+// Keep the local mock heatmap neutral. Activity in production must come from persisted API data.
+const contributions = [];
 const crud = {}; // admin collections
 const col = (k) => (crud[k] ??= [{ id: `${k}-1`, title: `Sample ${k}`, name: `Sample ${k}`, published: true, access: "FREE" }]);
 
@@ -58,7 +59,7 @@ http.createServer(async (req, res) => {
     if (!need()) return;
     if (path === "/notifications/popups") return ok([{ id: "pop1", title: "New SQL Cheat Sheet is available", type: "info" }]);
     if (path.startsWith("/notifications/popups/")) return ok({});
-    if (path === "/dashboard") { const s = solvedCount(); return ok({ progress: { solved: s, total: 620, easy: { solved: 0, total: 123 }, medium: { solved: s, total: 425 }, hard: { solved: 0, total: 72 } }, streak: { current: 3, longest: 9 }, studyMinutes: 135, counts: { bookmarks: 2, revision: 1, notes: 1 }, contributions, contributionTotal: contributions.reduce((a, c) => a + c.count, 0), continueLearning: [{ title: "Pattern Wise Sheet", href: "/sheets", progress: 12, kind: "DSA" }], todaysPlan: [{ id: "1", title: "Solve 2 Array problems", href: "/sheets", done: false }], recentlySolved: problems.slice(0, 1).map(withState), recommended: problems.slice(1, 3).map(withState), revisionDue: [], latestNotes: notes.map((n) => n), newRoadmaps: [], latestInterviews: interviews }); }
+    if (path === "/dashboard") { const s = solvedCount(); return ok({ progress: { solved: s, total: 620, easy: { solved: 0, total: 123 }, medium: { solved: s, total: 425 }, hard: { solved: 0, total: 72 } }, streak: { current: 0, longest: 0 }, studyMinutes: 0, counts: { bookmarks: 2, revision: 1, notes: 1 }, contributions, contributionTotal: 0, continueLearning: [{ title: "Pattern Wise Sheet", href: "/sheets", progress: 12, kind: "DSA" }], todaysPlan: [{ id: "1", title: "Solve 2 Array problems", href: "/sheets", done: false }], recentlySolved: problems.slice(0, 1).map(withState), recommended: problems.slice(1, 3).map(withState), revisionDue: [], latestNotes: notes.map((n) => n), newRoadmaps: [], latestInterviews: interviews }); }
     if (path === "/sheets/overview") return ok({ sheets: sheets.map((s) => ({ ...s, solvedCount: solvedCount() })), totals: { sheets: 3, topics: 4, problems: 620, solved: solvedCount() }, difficulty: { Easy: { solved: 0, total: 123 }, Medium: { solved: solvedCount(), total: 425 }, Hard: { solved: 0, total: 72 } } });
     let r; if ((r = /^\/sheets\/[^/]+\/topics$/.exec(path))) return ok(topics.map((t) => ({ ...t, problemCount: problems.filter((p) => p.topic === t.title).length, solvedCount: problems.filter((p) => p.topic === t.title && state[p.id]?.solved).length })));
     if ((r = /^\/sheets\/[^/]+\/topics\/([^/]+)\/problems$/.exec(path))) { const t = topics.find((x) => x.id === r[1]); const qq = (q.get("q") || "").toLowerCase(); return ok(page(problems.filter((p) => p.topic === t?.title && p.title.toLowerCase().includes(qq) && (!q.get("difficulty") || p.difficulty === q.get("difficulty")) && (q.get("bookmarked") !== "true" || state[p.id]?.bookmarked)).map(withState), q)); }
@@ -68,9 +69,9 @@ http.createServer(async (req, res) => {
     if (path === "/revision/counts") return ok({ flagged: 1, hint: 0, notes: 0, wrong: 0, recent: 1 });
     if (path === "/revision") return ok({ counts: {}, items: problems.filter((p) => state[p.id]?.revision).map(withState) });
     if (path === "/bookmarks") return ok(page(problems.filter((p) => state[p.id]?.bookmarked).map(withState), q));
-    if (path === "/activity/summary") return ok({ contributions, total: 400, current: 3, longest: 9, studyMinutes: 135, byType: { Solved: 40, Notes: 5, Practice: 12 } });
-    if (path === "/activity/feed") return ok(page([{ id: "e1", type: "solve", text: "Solved Two Sum", at: new Date().toISOString() }], q));
-    if (path === "/activity/calendar") return ok({ days: { [new Date().toISOString().slice(0, 10)]: 2 }, streak: 3 });
+    if (path === "/activity/summary") return ok({ contributions, total: 0, current: 0, longest: 0, studyMinutes: 0, byType: {} });
+    if (path === "/activity/feed") return ok(page([], q));
+    if (path === "/activity/calendar") return ok({ days: {}, streak: 0, today: new Date().toISOString().slice(0, 10) });
     for (const [base, key] of [["/core-cs", "core"], ["/aptitude", "apt"]]) {
       if (path === `${base}/categories`) return ok(cat(key));
       if (/\/categories\/[^/]+\/patterns$/.test(path) && path.startsWith(base)) return ok(patterns);

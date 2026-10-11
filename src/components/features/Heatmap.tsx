@@ -46,9 +46,12 @@ export function Heatmap({ data, total, today }: { data: { date: string; count: n
             <div className="mr-1 grid w-6 grid-rows-7 gap-[3px] text-[10px] text-faint">{["", "Mon", "", "Wed", "", "Fri", ""].map((d, i) => <span key={i} className="h-3 leading-3">{d}</span>)}</div>
             {weeks.map((w, i) => (
               <div key={i} className="grid grid-rows-7 gap-[3px]">
-                {w.map((c) => <div key={c.date} title={c.future ? undefined : `${c.count} learning activit${c.count === 1 ? "y" : "ies"} on ${c.date}`}
-                  aria-label={c.future ? undefined : `${c.count} learning activit${c.count === 1 ? "y" : "ies"} on ${c.date}`}
-                  className={cn("h-3 w-3 rounded-[3px]", c.future ? "opacity-0" : LV[learningActivityLevel(c.count)])} />)}
+                {w.map((c) => {
+                  const label = `${c.count} learning activit${c.count === 1 ? "y" : "ies"} on ${c.date}`;
+                  return <button key={c.date} type="button" disabled={c.future} title={c.future ? undefined : label}
+                    aria-label={c.future ? undefined : label} aria-hidden={c.future}
+                    className={cn("h-3 w-3 rounded-[3px] border-0 p-0", c.future ? "pointer-events-none opacity-0" : LV[learningActivityLevel(c.count)])} />;
+                })}
               </div>))}
           </div>
         </div>

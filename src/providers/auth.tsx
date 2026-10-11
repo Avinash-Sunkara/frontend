@@ -2,12 +2,12 @@
 import { createContext, useCallback, useContext, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { usePathname, useRouter } from "next/navigation";
-import { get, post } from "@/lib/api";
+import { ApiError, get, post } from "@/lib/api";
 import type { PopupNotification, User } from "@/lib/types";
 import { useToast } from "./toast";
 
-interface AuthCtx { user: User | null; loading: boolean; refresh: () => Promise<void>; logout: () => Promise<void> }
-const Ctx = createContext<AuthCtx>({ user: null, loading: true, refresh: async () => {}, logout: async () => {} });
+interface AuthCtx { user: User | null; loading: boolean; authError: string | null; refresh: () => Promise<void>; logout: () => Promise<void> }
+const Ctx = createContext<AuthCtx>({ user: null, loading: true, authError: null, refresh: async () => {}, logout: async () => {} });
 export const useAuth = () => useContext(Ctx);
 
 const PUBLIC = ["/", "/terms", "/privacy", "/login", "/register", "/forgot-password", "/reset-password", "/admin/login", "/auth/callback", "/verify-email"];
@@ -21,9 +21,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
   const isPublic = PUBLIC.includes(path);
 
-  const { data: user, isLoading, refetch } = useQuery({
+  const { data: user, isLoading, isError, error, refetch } = useQuery({
     queryKey: ["me"],
-    queryFn: () => get<User>("/auth/me").catch(() => null),
+    queryFn: async () => {
+      try { return await get<User>("/auth/me"); }
+      catch (e) { if (e instanceof ApiError && e.status === 401) return null; throw e; }
+    },
     staleTime: 5 * 60_000,
     retry: false,
   });
@@ -40,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => { window.removeEventListener("rb:unauthorized", onUnauth); window.removeEventListener("rb:api-error", onErr); };
   }, [qc, router, toast]);
 
-  useEffect(() => { if (!isLoading && !user && !isPublic) router.replace(loginFor(path)); }, [isLoading, user, isPublic, path, router]);
+  useEffect(() => { if (!isLoading && !isError && !user && !isPublic) router.replace(loginFor(path)); }, [isLoading, isError, user, isPublic, path, router]);
   useEffect(() => {
     if (!isLoading && user && user.role !== "ADMIN" && path.startsWith("/admin") && path !== "/admin/login") router.replace("/dashboard");
   }, [isLoading, user, path, router]);
@@ -56,5 +59,5 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }).catch(() => {});
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <Ctx.Provider value={{ user: user ?? null, loading: isLoading, refresh: async () => { await refetch(); }, logout }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user: user ?? null, loading: isLoading, authError: isError ? (error instanceof Error ? error.message : "Unable to verify your session.") : null, refresh: async () => { await refetch(); }, logout }}>{children}</Ctx.Provider>;
 }

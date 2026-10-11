@@ -4,7 +4,11 @@ export function normalizeApiUrl(value: string | undefined) {
   return `${base}/api/v1`;
 }
 
-export const API_URL = normalizeApiUrl(process.env.NEXT_PUBLIC_API_URL);
+export function resolveApiUrl(value: string | undefined, useSameOriginProxy = false) {
+  return useSameOriginProxy ? "/api/v1" : normalizeApiUrl(value);
+}
+
+export const API_URL = resolveApiUrl(process.env.NEXT_PUBLIC_API_URL, process.env.NEXT_PUBLIC_API_PROXY === "true");
 
 export class ApiError extends Error {
   constructor(public status: number, message: string, public data?: unknown) { super(message); }

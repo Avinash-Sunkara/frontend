@@ -12,12 +12,14 @@ npm run typecheck && npm test && npm run build
 ```
 
 ## Deploy (Vercel)
-Import the repo, set the env vars from `.env.example`, deploy. No other config is needed.
+Import the repo and deploy. Vercel production and preview builds automatically proxy `/api/*` through the same frontend origin to `https://backend-yvzq.onrender.com`; this keeps auth cookies first-party even when browsers block third-party cookies. Set `API_PROXY_TARGET` only when the API is hosted somewhere else. `NEXT_PUBLIC_API_URL` may stay set to the API URL for local use; the Vercel build selects the same-origin `/api/v1` path automatically.
+
+For local development, either call the API directly with `NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1`, or test the proxy with `API_PROXY_TARGET=http://localhost:4000` and `NEXT_PUBLIC_API_URL=/api/v1`.
 
 ## Backend requirements (important)
 - **CORS**: allow your Vercel origin with `credentials: true` (exact origin, not `*`).
-- **Cookies**: auth is httpOnly cookies set by the API. Because the API (Render) and the site (Vercel) are on different sites, set cookies with `Secure; SameSite=None` — or, better, put both under one parent domain (`app.example.com` / `api.example.com`) and use `SameSite=Lax`. Safari blocks cross-site cookies, so the same-parent-domain setup is strongly recommended.
-- **OAuth**: the frontend sends users to `${API}/auth/oauth/google|github?redirect=<site>/dashboard`; the backend completes the flow, sets the cookies and redirects back.
+- **Cookies**: auth uses httpOnly cookies. In Vercel production, the API proxy makes the browser request same-origin, so the cookies are first-party.
+- **OAuth**: password login works through the proxy. For Google/GitHub, set backend `GOOGLE_CALLBACK_URL` and `GITHUB_CALLBACK_URL` to `https://codewithaws.vercel.app/api/auth/google/callback` and `https://codewithaws.vercel.app/api/auth/github/callback`, then register those exact callback URLs in each provider console. The callback must pass through the frontend proxy so its session cookie belongs to the frontend origin.
 - **Render free tier** sleeps; the first request can take ~30s. The client shows a network-error message and retries are manual.
 - Full endpoint list and response shapes: `docs/API_CONTRACT.md`. Types live in `src/lib/types.ts`.
 
@@ -48,6 +50,8 @@ Google and GitHub buttons remain visible but disabled against the local mock; co
 | `npm test` | unit tests (utils, HTML sanitizer, PDF text search) |
 | `npm run check:api` | **contract test** — logs in and verifies ~35 endpoints return the shapes the UI needs. Run it against your real backend: `API_URL=https://… CHECK_EMAIL=… CHECK_PASSWORD=… ADMIN_EMAIL=… ADMIN_PASSWORD=… npm run check:api` |
 | `npx playwright install chromium && npm run e2e` | end-to-end flows + **no-horizontal-overflow** + screenshots at desktop (1440), laptop (1280), tablet (iPad), Android (Pixel 7) and iPhone 14. Screenshots land in `e2e/shots/` for your visual review against the reference designs. |
+
+The dashboard graph is **Learning Activity**, based on backend events. The counted actions, timezone and streak rules are documented in the [backend activity policy](https://github.com/Avinash-Sunkara/Code/blob/main/docs/LEARNING_ACTIVITY.md).
 
 ## Notes & PDF viewer
 Two modes, chosen by the backend in `GET /notes/:id/viewer`:

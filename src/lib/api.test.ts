@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeApiUrl } from "./api";
+import { normalizeApiUrl, resolveApiUrl } from "./api";
 
 describe("normalizeApiUrl", () => {
   it("adds the API version path when configured with only the backend origin", () => {
@@ -16,5 +16,15 @@ describe("normalizeApiUrl", () => {
 
   it("leaves an empty configuration empty", () => {
     expect(normalizeApiUrl(undefined)).toBe("");
+  });
+});
+
+describe("resolveApiUrl", () => {
+  it("uses the same-origin API path when the deployment proxy is enabled", () => {
+    expect(resolveApiUrl("https://backend.example.com/api/v1", true)).toBe("/api/v1");
+  });
+
+  it("keeps the configured backend URL for local development without a proxy", () => {
+    expect(resolveApiUrl("http://localhost:4000/api/v1")).toBe("http://localhost:4000/api/v1");
   });
 });

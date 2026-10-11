@@ -37,7 +37,7 @@ export default function Dashboard() {
           </div>
 
           <Card className="p-5"><Heatmap data={d.contributions} total={d.contributionTotal} today={d.today} />
-            <p className="mt-3 text-xs text-faint">Counts problems solved, revisions, personal notes, study sessions, practice, roadmap milestones and comments. Sign-ins, page views and refreshes do not count.</p></Card>
+            <p className="mt-3 text-xs text-faint">Learning Activity counts solved problems, completed revisions, new personal notes, study sessions, first-time aptitude practice, roadmap milestones and comments. Sign-ins, page views, bookmarks and puzzle games do not count.</p></Card>
 
           <div className="grid gap-6 lg:grid-cols-2">
             <Section title="Continue learning">

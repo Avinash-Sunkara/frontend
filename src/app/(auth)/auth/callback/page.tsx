@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { get } from "@/lib/api";
 import { useAuth } from "@/providers/auth";
 import type { User } from "@/lib/types";
+import { safeInternalPath } from "@/lib/utils";
 
 const MESSAGES: Record<string, string> = {
   access_denied: "Sign-in was cancelled.",
@@ -27,7 +28,7 @@ function Inner() {
       await refresh();
       let next = "/dashboard";
       try { next = sessionStorage.getItem("rb:next") || next; sessionStorage.removeItem("rb:next"); } catch {}
-      router.replace(next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard");
+      router.replace(safeInternalPath(next));
     })().catch(() => setFailed(true));
   }, [error, refresh, router]);
   if (error || failed) return (

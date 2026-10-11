@@ -10,27 +10,28 @@ import { Button, Field, Input } from "@/components/ui/kit";
 import { AuthShell } from "@/components/features/AuthShell";
 import { OAuthButtons } from "@/components/features/OAuthButtons";
 import { PasswordInput } from "@/components/features/PasswordInput";
-import { post } from "@/lib/api";
+import { ApiError, post } from "@/lib/api";
 import { useAuth } from "@/providers/auth";
 import { useToast } from "@/providers/toast";
 import type { User } from "@/lib/types";
+import { safeInternalPath } from "@/lib/utils";
 
-const schema = z.object({ email: z.string().email("Enter a valid email address"), password: z.string().min(1, "Enter your password"), remember: z.boolean().optional() });
+const schema = z.object({ email: z.string().trim().email("Enter a valid email address"), password: z.string().min(1, "Enter your password"), remember: z.boolean().optional() });
 type V = z.infer<typeof schema>;
 
 function Form() {
   const router = useRouter(); const sp = useSearchParams(); const { refresh } = useAuth(); const { toast } = useToast();
   const [err, setErr] = useState("");
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<V>({ resolver: zodResolver(schema), defaultValues: { remember: true } });
-  const safeNext = (n: string | null) => (n && n.startsWith("/") && !n.startsWith("//") ? n : "/dashboard");
   const onSubmit = handleSubmit(async (v) => {
     setErr("");
     try {
       const u = await post<User>("/auth/login", v);
       await refresh(); toast({ title: `Welcome back, ${u.username ?? "friend"}`, type: "success" });
-      router.replace(safeNext(sp.get("next")));
-    } catch (e: any) {
-      setErr(e.status === 401 ? "Incorrect email or password. If you signed up with Google or GitHub, use that button above." : e.status === 403 ? "This account is blocked. Contact support." : e.message);
+      router.replace(safeInternalPath(sp.get("next")));
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Unable to sign in. Please try again.";
+      setErr(e instanceof ApiError && e.status === 401 ? "Incorrect email or password. If you signed up with Google or GitHub, use that button above." : e instanceof ApiError && e.status === 403 ? "This account is blocked. Contact support." : message);
     }
   });
   return (

@@ -45,7 +45,10 @@ http.createServer(async (req, res) => {
     if (path === "/auth/forgot-password" || path === "/auth/reset-password") return ok({});
     if (path.startsWith("/public/testimonials")) return ok([{ id: "t1", name: "Sample Student", handle: "@sample", quote: "The pattern-wise sheet helped me a lot.", rating: 5 }]);
     if (path.startsWith("/public/founder")) return json(res, 404, {}, { origin });
-    if (path === "/auth/providers") return ok({ google: true, github: true });
+    if (path === "/auth/providers") return ok({ google: false, github: false });
+    if (/^\/auth\/oauth\/(google|github)$/.test(path) && m === "GET") {
+      res.writeHead(302, { Location: `${ORIGIN}/auth/callback?error=not_configured` }); res.end(); return;
+    }
     if (path === "/public/courses") return ok([{ id: "c1", title: "Placement Crash Course", description: "Eight weeks of guided DSA, core CS and mock interviews.", level: "Beginner", duration: "8 weeks", priceLabel: "₹4,999", highlights: ["Weekly live doubt sessions", "Two mock interviews"], ctaLabel: "Enrol now" }]);
     const PUZ = [{ id: "pz1", title: "100 Prisoners and a Lightbulb", slug: "prisoners-lightbulb", difficulty: "Hard", pattern: "Logic", description: "A warden offers 100 prisoners a deal...", hints: ["Pick one counter."], solution: "Nominate a counter who tallies the bulb switches." }, { id: "pz2", title: "Two Eggs, 100 Floors", slug: "two-eggs", difficulty: "Medium", pattern: "Optimisation", description: "Find the highest safe floor with two eggs.", hints: [], solution: "Drop at 14, 27, 39, ..." }];
     if (path === "/puzzles/patterns") return ok([{ pattern: "Logic", count: 1 }, { pattern: "Optimisation", count: 1 }]);

@@ -40,6 +40,7 @@ src/providers          auth · toast (top-centre popups) · theme · react-query
 npm run mock          # dependency-free mock of the full API on :4000  (user@example.com / admin@example.com, password1)
 NEXT_PUBLIC_API_URL=http://localhost:4000/api/v1 npm run dev
 ```
+Google and GitHub buttons remain visible but disabled against the local mock; configure provider credentials on the real API to enable OAuth.
 
 ## Testing
 | Command | What it checks |

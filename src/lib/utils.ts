@@ -12,5 +12,14 @@ export function timeAgo(iso?: string) {
 }
 export const fmtDuration = (mins = 0) => (mins >= 60 ? `${Math.floor(mins / 60)}h ${mins % 60}m` : `${mins}m`);
 export const initials = (n = "") => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase() || "U";
+export function safeInternalPath(path: string | null | undefined, fallback = "/dashboard") {
+  if (!path || !path.startsWith("/") || path.startsWith("//") || path.includes("\\")) return fallback;
+  try {
+    const target = new URL(path, "http://localhost");
+    return target.origin === "http://localhost" ? `${target.pathname}${target.search}${target.hash}` : fallback;
+  } catch {
+    return fallback;
+  }
+}
 export const diffColor = (d: string) =>
   d === "Easy" ? "text-easy bg-easy/10" : d === "Medium" ? "text-medium bg-medium/10" : "text-hard bg-hard/10";

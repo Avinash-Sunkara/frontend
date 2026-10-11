@@ -13,7 +13,7 @@ export default defineConfig({
     { command: "node dev/mock-server.mjs", url: `${apiUrl}/api/v1/public/testimonials`, reuseExistingServer: false,
       env: { PORT: String(apiPort), ORIGIN: webUrl } },
     { command: `npm run dev -- --port ${webPort}`, url: webUrl, reuseExistingServer: false, timeout: 120_000,
-      env: { NEXT_PUBLIC_API_URL: `${apiUrl}/api/v1`, NEXT_PUBLIC_SITE_URL: webUrl } },
+      env: { NEXT_PUBLIC_API_URL: `${apiUrl}/api/v1`, NEXT_PUBLIC_SITE_URL: webUrl, NEXT_DIST_DIR: ".next-playwright" } },
   ],
   projects: [
     { name: "desktop", use: { viewport: { width: 1440, height: 900 } } },

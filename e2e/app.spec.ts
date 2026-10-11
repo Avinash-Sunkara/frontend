@@ -37,12 +37,24 @@ test("wrong password shows an error", async ({ page }) => {
   await page.getByRole("button", { name: /sign in/i }).click(); await expect(page.getByRole("alert").filter({ hasText: /incorrect/i })).toBeVisible();
 });
 
+test("login shows Google and GitHub when social sign-in is not configured", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page.getByRole("button", { name: "Google" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "GitHub" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Google" })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "GitHub" })).toBeDisabled();
+  await expect(page.getByText(/social sign-in is disabled or not configured/i)).toBeVisible();
+});
+
 test("unauthenticated visit to /dashboard redirects to login", async ({ page }) => { await page.goto("/dashboard"); await expect(page).toHaveURL(/\/login/); });
 
 test("DSA sheet: expand topic, mark solved, LeetCode opens in new tab", async ({ page, context }) => {
   await login(page, "user@example.com", "/sheets");
   await expect(page.getByRole("heading", { name: /learn patterns/i })).toBeVisible();
   await expect(page.getByText("Two Sum")).toBeVisible();
+  // The in-memory mock persists across viewport projects, so normalize the first row first.
+  const alreadySolved = page.getByRole("button", { name: "Mark unsolved" }).first();
+  if (await alreadySolved.count()) await alreadySolved.click();
   await page.getByRole("button", { name: "Mark solved" }).first().click();
   await expect(page.getByRole("button", { name: "Mark unsolved" }).first()).toBeVisible();
   const link = page.getByRole("link", { name: "Solve on LeetCode" }).first();
@@ -74,7 +86,9 @@ test("non-admin cannot use /admin; admin can", async ({ page }) => {
   await login(page, "user@example.com", "/admin"); await expect(page).toHaveURL(/\/dashboard/);
 });
 test("admin login → overview", async ({ page }) => {
-  await page.goto("/admin/login"); const email = page.getByLabel("Email"); await email.fill("admin@example.com"); await expect(email).toHaveValue("admin@example.com");
+  await page.goto("/admin/login");
+  await expect(page.getByRole("link", { name: /forgot password/i })).toHaveAttribute("href", "/forgot-password");
+  const email = page.getByLabel("Email"); await email.fill("admin@example.com"); await expect(email).toHaveValue("admin@example.com");
   await page.getByRole("textbox", { name: /Password/ }).fill("password1"); await expect(email).toHaveValue("admin@example.com");
   const response = page.waitForResponse((r) => new URL(r.url()).pathname.endsWith("/admin/auth/login") && r.request().method() === "POST");
   await page.getByRole("button", { name: /sign in/i }).click();

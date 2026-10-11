@@ -6,6 +6,8 @@ try { apiHost = new URL(apiUrl).hostname; } catch {}
 // site's own domain, so sign-in cookies are first-party and survive Safari / Chrome third-party-cookie blocking (e.g. Vercel + Render on different domains).
 const proxyTarget = (process.env.API_PROXY_TARGET || "").replace(/\/$/, "");
 const nextConfig = {
+  // Keep Playwright's dev server out of the .next cache used by a concurrently running local app.
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
   async rewrites() { return proxyTarget ? [{ source: "/api/:path*", destination: `${proxyTarget}/api/:path*` }] : []; },
   images: {

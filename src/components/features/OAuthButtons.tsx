@@ -7,22 +7,29 @@ const GH = () => (<svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColo
 
 export function OAuthButtons() {
   const providers = useGet<{ google: boolean; github: boolean }>("/auth/providers", undefined, { staleTime: 10 * 60_000 });
-  const on = (p: "google" | "github") => process.env[p === "google" ? "NEXT_PUBLIC_ENABLE_GOOGLE" : "NEXT_PUBLIC_ENABLE_GITHUB"] !== "false" && providers.data?.[p] === true;
+  const enabledByEnv = {
+    google: process.env.NEXT_PUBLIC_ENABLE_GOOGLE !== "false",
+    github: process.env.NEXT_PUBLIC_ENABLE_GITHUB !== "false",
+  };
+  const available = (p: "google" | "github") => enabledByEnv[p] && providers.data?.[p] === true;
   const go = (p: "google" | "github") => {
     const next = new URLSearchParams(window.location.search).get("next");
     try { if (next) sessionStorage.setItem("rb:next", next); else sessionStorage.removeItem("rb:next"); } catch {}
     window.location.href = oauthUrl(p);
   };
-  const google = on("google"), github = on("github");
-  if (providers.isLoading) return null;
-  if (providers.isError) return <p role="alert" className="text-center text-sm text-medium">Social sign-in is temporarily unavailable. You can still sign in with email and password.</p>;
-  if (!google && !github) return null;
+  const google = available("google"), github = available("github");
+  const buttonClass = "flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50";
   return (
     <>
-      <div className={`grid gap-3 ${google && github ? "grid-cols-2" : "grid-cols-1"}`}>
-        {google && <button type="button" onClick={() => go("google")} className="flex h-12 items-center justify-center gap-2 rounded-xl bg-white text-sm font-semibold text-neutral-900 hover:bg-neutral-100"><G />Google</button>}
-        {github && <button type="button" onClick={() => go("github")} className="flex h-12 items-center justify-center gap-2 rounded-xl border border-line bg-raised text-sm font-semibold hover:bg-line"><GH />GitHub</button>}
+      <div className="grid grid-cols-2 gap-3">
+        <button type="button" onClick={() => go("google")} disabled={!google} title={google ? undefined : "Google sign-in is disabled or not configured"} className={`${buttonClass} bg-white text-neutral-900 hover:bg-neutral-100`}><G />Google</button>
+        <button type="button" onClick={() => go("github")} disabled={!github} title={github ? undefined : "GitHub sign-in is disabled or not configured"} className={`${buttonClass} border border-line bg-raised hover:bg-line`}><GH />GitHub</button>
       </div>
+      {providers.isError
+        ? <p role="alert" className="mt-2 text-center text-sm text-medium">Social sign-in is temporarily unavailable. You can still sign in with email and password.</p>
+        : !providers.isLoading && !google && !github
+          ? <p className="mt-2 text-center text-sm text-muted">Social sign-in is disabled or not configured on this server. Use email and password instead.</p>
+          : null}
       <div className="my-6 flex items-center gap-4 text-xs text-muted"><span className="h-px flex-1 bg-line" />or continue with email<span className="h-px flex-1 bg-line" /></div>
     </>
   );

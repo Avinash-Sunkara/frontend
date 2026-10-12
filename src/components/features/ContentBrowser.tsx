@@ -6,6 +6,7 @@ import { Async, Button, Card, Empty, ListSkeleton, Skeleton, Tabs, useDebounced 
 import { Rich } from "./Rich";
 import { AccessGate } from "./AccessGate";
 import { PracticePanel } from "./PracticePanel";
+import { CoreMockTest } from "./CoreMockTest";
 import { useAction, useGet } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
 import type { ContentTopic, CoreCategory, CorePattern } from "@/lib/types";
@@ -89,7 +90,7 @@ function TopicPane({ base, slug, withPractice }: { base: string; slug: string; w
                 <hr className="my-6 border-line" />
                 <Rich html={t.html} />
                 <div className="mt-8 flex justify-end">{t.completed ? <span className="flex items-center gap-2 text-sm font-semibold text-brand"><CheckCircle2 className="h-4 w-4" />Completed</span> : <Button variant="outline" loading={done.isPending} onClick={() => done.mutate(undefined as never)}>Mark topic complete</Button>}</div>
-              </>) : <PracticePanel base={base} slug={slug} />}
+              </>) : base === "/core-cs" ? <CoreMockTest slug={slug} /> : <PracticePanel base={base} slug={slug} />}
             </Card>)}
         </Async>
       </div>

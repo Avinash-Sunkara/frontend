@@ -17,6 +17,9 @@ export default function Page() {
         { id: "topics", label: "Topics & notes", node: <ResourceManager<any> title="Topics" endpoint={`${BASE}/topics`} publishable orderable
           columns={[{ key: "title", label: "Title" }, { key: "patternTitle", label: "Pattern" }, { key: "published", label: "Status", render: (r) => <PublishedBadge r={r} /> }]}
           fields={[{ name: "patternId", label: "Pattern", required: true, optionsEndpoint: `${BASE}/patterns`, half: true }, { name: "title", label: "Title", required: true, half: true }, { name: "summary", label: "Summary", type: "textarea" }, { name: "html", label: "Notes content (HTML)", type: "html", required: true }, { name: "order", label: "Order number", type: "number", half: true }, { name: "published", label: "Published", type: "switch" }]} /> },
+        { id: "questions", label: "Practice questions", node: <ResourceManager<any> title="Questions" endpoint={`${BASE}/questions`} publishable orderable createDefaults={{ published: true }}
+          columns={[{ key: "prompt", label: "Question", render: (r) => <span className="line-clamp-1 max-w-md">{String(r.prompt).replace(/<[^>]+>/g, "")}</span> }, { key: "topicTitle", label: "Topic" }, { key: "published", label: "Status", render: (r) => <PublishedBadge r={r} /> }]}
+          fields={[{ name: "topicId", label: "Topic", required: true, optionsEndpoint: `${BASE}/topics`, half: true }, { name: "prompt", label: "Question", type: "html", required: true }, { name: "options", label: "Answer choices", type: "tags", required: true, hint: "Comma separated; enter 2–8 choices" }, { name: "answerIndex", label: "Correct choice (0 = first)", type: "number", required: true, half: true }, { name: "explanation", label: "Answer explanation", type: "html" }, { name: "order", label: "Order number", type: "number", half: true }, { name: "published", label: "Published", type: "switch" }]} /> },
       ]} />
     </>
   );

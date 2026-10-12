@@ -5,6 +5,7 @@ import { BookOpen, ListChecks, Layers } from "lucide-react";
 import { Async, Skeleton } from "@/components/ui/kit";
 import { SheetView } from "@/components/features/SheetView";
 import ProgressPanel from "@/components/features/ProgressPanel";
+import { CertificationsSection } from "@/components/features/CertificationsSection";
 import { useGet } from "@/hooks/useApi";
 import { cn } from "@/lib/utils";
 import type { SheetsOverview } from "@/lib/types";
@@ -37,6 +38,7 @@ function Inner() {
                       <span className="text-sm text-muted">{s.solvedCount} / {s.problemCount} solved</span></span></button>))}
               </div>
               <SheetView key={active.id} sheet={active} initialCompany={sp.get("company") ?? ""} />
+              <CertificationsSection />
             </>);
           }}
         </Async>

@@ -21,6 +21,7 @@ export interface SheetsOverview {
   sheets: Sheet[]; totals: { sheets: number; topics: number; problems: number; solved: number };
   difficulty: Record<Difficulty, { solved: number; total: number }>;
 }
+export interface Certification { id: string; title: string; provider: string; description?: string; url: string; imageUrl?: string }
 export interface CoreCategory { id: string; slug: string; title: string; topicCount: number; icon?: string }
 export interface CorePattern { id: string; title: string; topics: { id: string; title: string; slug: string; completed?: boolean }[] }
 export interface Heading { id: string; text: string; level: number }

@@ -22,10 +22,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const links = (
     <nav className="flex flex-col gap-1" aria-label="Admin">{NAV.map(([href, label, I]) => {
       const active = href === "/admin" ? path === href : path.startsWith(href);
-      return <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined} className={cn("flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium", active ? "bg-brand/15 text-brand" : "text-muted hover:bg-raised hover:text-fg")}><I className="h-[18px] w-[18px]" />{label}</Link>; })}</nav>);
+      return <Link key={href} href={href} onClick={() => setOpen(false)} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium", active ? "bg-brand/15 text-brand" : "text-muted hover:bg-raised hover:text-fg")}><I className="pointer-events-none h-[18px] w-[18px] shrink-0" />{label}</Link>; })}</nav>);
   return (
     <div className="flex min-h-dvh">
-      <aside className="sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-4 overflow-y-auto border-r border-line bg-surface/60 p-4 lg:flex">
+      <aside className="glass sticky top-0 hidden h-dvh w-64 shrink-0 flex-col gap-4 overflow-y-auto border-r p-4 lg:flex">
         <div className="flex items-center gap-2"><Logo href="/admin" /><span className="rounded-md bg-brand/15 px-1.5 py-0.5 text-[10px] font-bold text-brand">ADMIN</span></div>{links}
         <div className="mt-auto space-y-1 border-t border-line pt-3 text-sm">
           <Link href="/dashboard" className="flex items-center gap-3 rounded-xl px-3 py-2 text-muted hover:text-fg"><ArrowLeft className="h-4 w-4" />Back to app</Link>

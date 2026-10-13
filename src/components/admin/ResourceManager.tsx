@@ -64,7 +64,11 @@ function toBody(fields: FieldDef[], v: Record<string, any>, extra?: Record<strin
   Object.entries(merged).forEach(([k, x]) => {
     const def = fields.find((f) => f.name === k);
     if (x === undefined || x === null || (def?.showIf && !def.showIf(v))) return;
-    if (x instanceof File) fd.append(k, x); else if (Array.isArray(x)) x.forEach((i) => (i instanceof File ? fd.append(k, i) : fd.append(`${k}[]`, String(i)))); else fd.append(k, String(x));
+    if (x instanceof File) fd.append(k, x);
+    else if (Array.isArray(x)) {
+      if (x.length === 0) fd.append(k, "");
+      else x.forEach((i) => (i instanceof File ? fd.append(k, i) : fd.append(k, String(i))));
+    } else fd.append(k, String(x));
   });
   return fd;
 }
@@ -126,6 +130,7 @@ export function ResourceManager<T extends { id: string; published?: boolean }>(p
                 : <Field label={f.label + (f.required ? " *" : "")} hint={f.hint}><FieldInput f={f} v={v} set={(k, x) => setV((o) => ({ ...o, [k]: x }))} /></Field>}
             </div>))}
         </div>
+        {save.error && <p role="alert" className="mt-4 rounded-xl border border-hard/30 bg-hard/10 px-3 py-2 text-sm text-hard">Couldn&apos;t save this {p.title.replace(/s$/, "").toLowerCase()}: {save.error.message}</p>}
         <div className="mt-6 flex justify-end gap-2"><Button variant="ghost" onClick={() => setEdit(null)}>Cancel</Button>
           <Button disabled={missing} loading={save.isPending} onClick={() => save.mutate(toBody(p.fields, v, p.createDefaults) as any)}>Save</Button></div>
       </Modal>

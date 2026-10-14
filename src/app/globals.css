@@ -42,6 +42,10 @@ body { min-width: 320px; overflow-x: clip; font-family: var(--font-sans), system
 .prose-rb code { font-family: var(--font-mono); font-size: .86em; background: rgb(var(--brand) / .12); border: 1px solid rgb(var(--brand) / .2); padding: .1em .4em; border-radius: 6px; }
 .prose-rb pre { background: rgb(var(--raised)); border: 1px solid rgb(var(--line)); border-radius: 14px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }
 .prose-rb pre code { background: none; border: 0; padding: 0; }
+.prose-rb pre code { display: block; min-width: max-content; counter-reset: code-line; }
+.prose-rb pre .code-line { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr); min-height: 1.55em; }
+.prose-rb pre .code-line-number { color: rgb(var(--faint)); opacity: .75; text-align: right; padding-right: .9rem; user-select: none; }
+.prose-rb pre .code-line-content { white-space: pre; }
 .prose-rb table { width: 100%; border-collapse: collapse; display: block; overflow-x: auto; margin: 1rem 0; }
 .prose-rb th, .prose-rb td { border: 1px solid rgb(var(--line)); padding: .6rem .9rem; text-align: left; }
 .prose-rb th { background: rgb(var(--raised)); }

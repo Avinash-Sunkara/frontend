@@ -97,6 +97,7 @@ export function ResourceManager<T extends { id: string; published?: boolean }>(p
   const pub = useAction<{ id: string; published: boolean }, void>("patch", (b) => `${p.endpoint}/${b.id}/publish`, { onSuccess: () => { reload(); invalidateUserData(); } });
   const move = useAction<{ id: string; direction: "up" | "down" }, void>("patch", (b) => `${p.endpoint}/${b.id}/reorder`, { onSuccess: () => { reload(); invalidateUserData(); } });
   const missing = p.fields.some((f) => f.required && (!f.showIf || f.showIf(v)) && (v[f.name] === undefined || v[f.name] === "" || (Array.isArray(v[f.name]) && !v[f.name].length)) && !(f.type === "file" && edit !== "new"));
+  const missingFields = p.fields.filter((f) => f.required && (!f.showIf || f.showIf(v)) && (v[f.name] === undefined || v[f.name] === "" || (Array.isArray(v[f.name]) && !v[f.name].length)) && !(f.type === "file" && edit !== "new"));
 
   const actions = (r: T, i: number) => (
     <div className="flex items-center justify-end gap-1">
@@ -132,7 +133,8 @@ export function ResourceManager<T extends { id: string; published?: boolean }>(p
         </div>
         {save.error && <p role="alert" className="mt-4 rounded-xl border border-hard/30 bg-hard/10 px-3 py-2 text-sm text-hard">Couldn&apos;t save this {p.title.replace(/s$/, "").toLowerCase()}: {save.error.message}</p>}
         <div className="mt-6 flex justify-end gap-2"><Button variant="ghost" onClick={() => setEdit(null)}>Cancel</Button>
-          <Button disabled={missing} loading={save.isPending} onClick={() => save.mutate(toBody(p.fields, v, p.createDefaults) as any)}>Save</Button></div>
+          <div className="flex flex-col items-end gap-1"><Button disabled={missing} loading={save.isPending} onClick={() => save.mutate(toBody(p.fields, v, p.createDefaults) as any)}>Save</Button>
+            {missing && <span className="text-xs text-medium">Required: {missingFields.map((f) => f.label).join(", ")}</span>}</div></div>
       </Modal>
       <Confirm open={!!del} onClose={() => setDel(null)} onConfirm={() => remove.mutate(undefined as never)} loading={remove.isPending} title="Delete this item?" body="This can't be undone. Related user progress may also be removed." label="Delete" />
     </div>

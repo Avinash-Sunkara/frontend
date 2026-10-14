@@ -60,7 +60,7 @@ export async function api<T = unknown>(path: string, opts: Opts = {}, retried = 
   }
   if (!res.ok) {
     let data: any; try { data = await res.json(); } catch {}
-    const err = new ApiError(res.status, data?.message || STATUS_MESSAGES[res.status] || `Request failed (${res.status})`, data);
+    const err = new ApiError(res.status, data?.error?.message || data?.message || STATUS_MESSAGES[res.status] || `Request failed (${res.status})`, data);
     if (typeof window !== "undefined" && res.status === 401 && !opts.silent401) window.dispatchEvent(new CustomEvent("rb:unauthorized"));
     if (typeof window !== "undefined" && (res.status === 429 || res.status >= 500))
       window.dispatchEvent(new CustomEvent("rb:api-error", { detail: err.message }));

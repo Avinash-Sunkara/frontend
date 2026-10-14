@@ -16,19 +16,19 @@ export function CoreMockTest({ slug }: { slug: string }) {
   const [result, setResult] = useState<MockResult | null>(null);
   const submit = useAction<{ answers: { questionId: string; choice: number }[] }, MockResult>("post", `/core-cs/topics/${slug}/mock-test/submit`, { onSuccess: setResult });
 
-  return <Async q={questions} isEmpty={(items) => items.length === 0} empty={<Empty title="No practice questions yet" hint="Questions added by the admin will appear here as a mock test." />}>
+  return <Async q={questions} isEmpty={(items) => items.length === 0} empty={<Empty title="No practice questions yet" hint="Questions and code programs added by the admin will appear here." />}>
     {(items) => {
       const review = new Map(result?.results.map((r) => [r.id, r]) ?? []);
       const reset = () => { setAnswers({}); setResult(null); submit.reset(); };
       return <div className="space-y-5">
         <Card className="flex flex-wrap items-center justify-between gap-4 p-5">
-          <div><p className="font-bold">Topic mock test</p><p className="mt-1 text-sm text-muted">{items.length} questions · Answer all questions, then submit to see your score and explanations.</p></div>
+          <div><p className="font-bold">Topic practice</p><p className="mt-1 text-sm text-muted">{items.length} questions · Answer all questions, then submit to see your score and explanations.</p></div>
           {result ? <div className="flex items-center gap-2 rounded-full bg-brand/10 px-4 py-2 font-bold text-brand"><Trophy className="h-4 w-4" />Score: {result.score}/{result.total}</div> : <span className="rounded-full border border-line px-3 py-1.5 text-sm text-muted">{Object.keys(answers).length}/{items.length} answered</span>}
         </Card>
         {items.map((q, i) => {
           const submitted = review.get(q.id);
           return <Card key={q.id} className="p-5">
-            <div className="mb-3 flex items-start gap-2"><span className="font-mono text-sm text-faint">{String(i + 1).padStart(2, "0")}</span><div className="font-semibold"><Rich html={q.prompt} /></div></div>
+            <div className="mb-3 flex min-w-0 items-start gap-2"><span className="shrink-0 font-mono text-sm text-faint">{String(i + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><Rich html={q.prompt} /></div></div>
             <div className="grid gap-2">
               {(q.options ?? []).map((option, index) => {
                 const selected = submitted ? submitted.choice === index : answers[q.id] === index;

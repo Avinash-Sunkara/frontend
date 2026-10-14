@@ -12,7 +12,7 @@ import { ApiError, post } from "@/lib/api";
 import { useAuth } from "@/providers/auth";
 import type { User } from "@/lib/types";
 
-const schema = z.object({ email: z.string().trim().email("Enter a valid email address"), password: z.string().min(1, "Enter your password") });
+const schema = z.object({ email: z.string().trim().toLowerCase().email("Enter a valid email address"), password: z.string().min(1, "Enter your password") });
 type Credentials = z.infer<typeof schema>;
 
 export default function Page() {

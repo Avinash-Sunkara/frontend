@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 export type FieldDef = {
   name: string; label: string; hint?: string; required?: boolean;
-  type?: "text" | "textarea" | "number" | "url" | "select" | "multiselect" | "file" | "switch" | "tags" | "emails" | "access" | "html";
+  type?: "text" | "textarea" | "number" | "url" | "select" | "multiselect" | "file" | "switch" | "tags" | "emails" | "access" | "html" | "program";
   options?: { value: string; label: string }[]; optionsEndpoint?: string; optionLabel?: string; accept?: string; multiple?: boolean;
   showIf?: (v: Record<string, any>) => boolean; half?: boolean;
 };
@@ -40,10 +40,52 @@ function OptionsSelect({ f, value, onChange }: { f: FieldDef; value: any; onChan
   return <Select value={value ?? ""} onChange={(e) => onChange(e.target.value)}><option value="">— none —</option>{list.map((o) => <option key={o.id} value={o.id}>{lab(o)}</option>)}</Select>;
 }
 
+const PROGRAM_LANGUAGES = ["text", "c", "cpp", "csharp", "java", "javascript", "python", "sql"];
+export type ProgramPrompt = { statement: string; code: string; language: string };
+
+export function parseProgramPrompt(value: string): ProgramPrompt {
+  const prefix = "<div data-core-program><div data-program-statement>";
+  const codeMarker = '</div><pre data-program-code-block><code data-program-code data-language="';
+  const suffix = "</code></pre></div>";
+  const splitAt = value.indexOf(codeMarker, prefix.length);
+  if (!value.startsWith(prefix) || splitAt < 0 || !value.endsWith(suffix)) return { statement: value, code: "", language: "text" };
+  const languageStart = splitAt + codeMarker.length;
+  const languageEnd = value.indexOf('">', languageStart);
+  if (languageEnd < 0) return { statement: value, code: "", language: "text" };
+  const decodeHtml = (text: string) => text.replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
+  const language = value.slice(languageStart, languageEnd);
+  return {
+    statement: value.slice(prefix.length, splitAt),
+    code: decodeHtml(value.slice(languageEnd + 2, -suffix.length)),
+    language: PROGRAM_LANGUAGES.includes(language) ? language : "text",
+  };
+}
+
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+export function writeProgramPrompt({ statement, code, language }: ProgramPrompt) {
+  if (!code.trim()) return statement;
+  return `<div data-core-program><div data-program-statement>${statement}</div><pre data-program-code-block><code data-program-code data-language="${language}">${escapeHtml(code)}</code></pre></div>`;
+}
+
 function FieldInput({ f, v, set }: { f: FieldDef; v: Record<string, any>; set: (k: string, x: any) => void }) {
   const val = v[f.name];
   switch (f.type) {
     case "textarea": case "html": return <Textarea rows={f.type === "html" ? 10 : 4} value={val ?? ""} onChange={(e) => set(f.name, e.target.value)} className={f.type === "html" ? "font-mono text-xs" : ""} />;
+    case "program": {
+      const prompt = parseProgramPrompt(val ?? "");
+      const update = (next: Partial<ProgramPrompt>) => set(f.name, writeProgramPrompt({ ...prompt, ...next }));
+      return <div className="space-y-3">
+        <div><label className="mb-1.5 block text-xs font-semibold text-muted">Question or instructions (HTML supported)</label>
+          <Textarea rows={4} value={prompt.statement} onChange={(e) => update({ statement: e.target.value })} /></div>
+        <div><label className="mb-1.5 block text-xs font-semibold text-muted">Program code (optional)</label>
+          <Select value={prompt.language} onChange={(e) => update({ language: e.target.value })}>{PROGRAM_LANGUAGES.map((language) => <option key={language} value={language}>{language.toUpperCase()}</option>)}</Select>
+          <Textarea rows={10} value={prompt.code} onChange={(e) => update({ code: e.target.value })} placeholder="Paste a code sample here…" className="mt-2 font-mono text-xs" spellCheck={false} /></div>
+        <p className="text-xs text-muted">Learners see code in a formatted, scrollable block with line breaks preserved.</p>
+      </div>;
+    }
     case "number": return <Input type="number" min={0} value={val ?? ""} onChange={(e) => set(f.name, e.target.value === "" ? undefined : +e.target.value)} />;
     case "url": return <Input type="url" placeholder="https://" value={val ?? ""} onChange={(e) => set(f.name, e.target.value)} />;
     case "select": case "access": return <Select value={val ?? ""} onChange={(e) => set(f.name, e.target.value)}>{!f.required && <option value="">—</option>}{f.options?.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</Select>;
@@ -56,19 +98,18 @@ function FieldInput({ f, v, set }: { f: FieldDef; v: Record<string, any>; set: (
   }
 }
 
-function toBody(fields: FieldDef[], v: Record<string, any>, extra?: Record<string, any>) {
-  const hasFile = fields.some((f) => f.type === "file" && v[f.name]);
+export function toBody(fields: FieldDef[], v: Record<string, any>, extra?: Record<string, any>) {
+  const hasFile = fields.some((f) => {
+    const value = v[f.name];
+    return f.type === "file" && (value instanceof File || (Array.isArray(value) && value.some((item) => item instanceof File)));
+  });
   const merged = { ...extra, ...v };
   if (!hasFile) { const o: any = {}; fields.forEach((f) => { if (f.type !== "file" && v[f.name] !== undefined && (!f.showIf || f.showIf(v))) o[f.name] = v[f.name]; }); return { ...extra, ...o }; }
   const fd = new FormData();
   Object.entries(merged).forEach(([k, x]) => {
     const def = fields.find((f) => f.name === k);
     if (x === undefined || x === null || (def?.showIf && !def.showIf(v))) return;
-    if (x instanceof File) fd.append(k, x);
-    else if (Array.isArray(x)) {
-      if (x.length === 0) fd.append(k, "");
-      else x.forEach((i) => (i instanceof File ? fd.append(k, i) : fd.append(k, String(i))));
-    } else fd.append(k, String(x));
+    if (x instanceof File) fd.append(k, x); else if (Array.isArray(x)) x.forEach((i) => fd.append(k, i instanceof File ? i : String(i))); else fd.append(k, String(x));
   });
   return fd;
 }

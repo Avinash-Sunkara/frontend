@@ -66,14 +66,14 @@ export function Field({ label, error, hint, children }: { label: string; error?:
 
 /* ---------- Surface ---------- */
 export const Card = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div className={cn("rounded-2xl border border-line bg-surface shadow-card sm:rounded-3xl", className)} {...p} />);
+  <div className={cn("rounded-2xl border border-line bg-surface/75 shadow-card backdrop-blur-xl sm:rounded-3xl", className)} {...p} />);
 export const Badge = ({ className, tone = "neutral", ...p }: React.HTMLAttributes<HTMLSpanElement> & { tone?: "neutral" | "brand" | "easy" | "medium" | "hard" | "premium" }) => (
   <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold",
     tone === "neutral" && "bg-raised text-muted", tone === "brand" && "bg-brand/10 text-brand", tone === "easy" && "bg-easy/10 text-easy",
     tone === "medium" && "bg-medium/10 text-medium", tone === "hard" && "bg-hard/10 text-hard", tone === "premium" && "bg-medium/15 text-medium", className)} {...p} />);
 export const Chip = ({ active, className, ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { active?: boolean }) => (
   <button className={cn("min-h-10 rounded-full border px-4 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand",
-    active ? "border-[#172338] bg-[#172338] text-white hover:bg-[#223653]" : "border-line bg-surface text-muted hover:border-faint hover:bg-raised hover:text-fg", className)} {...p} />);
+    active ? "border-brand bg-brand text-brand-ink hover:bg-brand/90" : "border-line bg-surface text-muted hover:border-faint hover:bg-raised hover:text-fg", className)} {...p} />);
 
 export function Progress({ value, className, tone }: { value: number; className?: string; tone?: "easy" | "medium" | "hard" }) {
   return (
@@ -173,7 +173,7 @@ export function Tabs<T extends string>({ value, onChange, items, className }: { 
     <div role="tablist" className={cn("inline-flex gap-1 rounded-2xl border border-line bg-surface p-1", className)}>
       {items.map((i) => (
         <button key={i.id} role="tab" aria-selected={value === i.id} onClick={() => onChange(i.id)}
-          className={cn("min-h-10 rounded-xl px-4 py-2 text-sm font-semibold transition-colors", value === i.id ? "bg-[#172338] text-white" : "text-muted hover:bg-raised hover:text-fg")}>{i.label}</button>))}
+          className={cn("min-h-10 rounded-xl px-4 py-2 text-sm font-semibold transition-colors", value === i.id ? "bg-brand text-brand-ink" : "text-muted hover:bg-raised hover:text-fg")}>{i.label}</button>))}
     </div>);
 }
 export function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {

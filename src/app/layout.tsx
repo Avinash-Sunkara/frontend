@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   title: { default: `${BRAND.name} — pattern-first placement prep`, template: `%s · ${BRAND.name}` },
   description: BRAND.description,
 };
-export const viewport: Viewport = { themeColor: "#f6f8fa", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#050a08", width: "device-width", initialScale: 1 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

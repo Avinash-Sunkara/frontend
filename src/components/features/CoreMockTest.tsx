@@ -9,6 +9,14 @@ import { Rich } from "./Rich";
 
 type MockResult = { score: number; total: number; results: { id: string; choice: number; answerIndex: number; correct: boolean; explanation?: string }[] };
 
+const practiceHtmlTags = /<\/?(?:p|div|br|pre|code|h[1-6]|ul|ol|li|strong|em|b|i|table|blockquote)\b[^>]*>/i;
+const looksLikeCode = (text: string) => /[\r\n]/.test(text) && /(?:[{};]|=>|\b(?:const|let|var|return|if|else|for|while|class|def|public|private|function|print)\b|^\s{2,}\S)/m.test(text);
+const escapeCode = (text: string) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function promptHtml(prompt: string) {
+  if (practiceHtmlTags.test(prompt) || !looksLikeCode(prompt)) return prompt;
+  return `<pre><code>${escapeCode(prompt)}</code></pre>`;
+}
+
 /** A topic-sized mock test: learners answer every question before seeing the key. */
 export function CoreMockTest({ slug }: { slug: string }) {
   const questions = useGet<Question[]>(`/core-cs/topics/${slug}/questions`);
@@ -28,7 +36,7 @@ export function CoreMockTest({ slug }: { slug: string }) {
         {items.map((q, i) => {
           const submitted = review.get(q.id);
           return <Card key={q.id} className="p-5">
-            <div className="mb-3 flex min-w-0 items-start gap-2"><span className="shrink-0 font-mono text-sm text-faint">{String(i + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><Rich html={q.prompt} /></div></div>
+            <div className="mb-3 flex min-w-0 items-start gap-2"><span className="shrink-0 font-mono text-sm text-faint">{String(i + 1).padStart(2, "0")}</span><div className="min-w-0 flex-1"><Rich html={promptHtml(q.prompt)} /></div></div>
             <div className="grid gap-2">
               {(q.options ?? []).map((option, index) => {
                 const selected = submitted ? submitted.choice === index : answers[q.id] === index;
